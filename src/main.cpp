@@ -34,12 +34,14 @@
 #define DELAY_UPDATE_PROJECTILE     20
 #define DELAY_SHOT_PROJECTILE       250
 #define DELAY_SPAWN_ENEMY           1500
+#define DELAY_UPDATE_ENEMY          50
 
 // CORES
 #define BASE_TEXT_COLOR             0xFFE0
 #define BACKGROUND_COLOR            0x0000
 #define ACTOR_COLOR                 0xFFFF
 #define ACTOR_DAMAGE_COLOR          0xF800
+#define GAME_OVER_COLOR             0x7BEF
 
 // MAXIMO RANKING E MAXIMO NOME DO JOGADOR
 #define MAX_RANKING_ENTRIES         3
@@ -301,18 +303,20 @@ void resetGameVariables()
 
 void updateGame(int8_t leftInput, int8_t rightInput)
 {
-    if (leftInput == HIGH) {
-        movePlayerShip(MOVEMENT_DISTANCE_RIGHT);
-    }
-    if (rightInput == HIGH) {
-        movePlayerShip(MOVEMENT_DISTANCE_LEFT);
-    }
-    shootPlayerProjectile();
-    updateProjectiles();
+    if (currentScreen == SCREEN_PLAY) {
+        if (leftInput == HIGH) {
+            movePlayerShip(MOVEMENT_DISTANCE_RIGHT);
+        }
+        if (rightInput == HIGH) {
+            movePlayerShip(MOVEMENT_DISTANCE_LEFT);
+        }
+        shootPlayerProjectile();
+        updateProjectiles();
 
-    SpawnNewEnemy();
+        SpawnNewEnemy();
 
-    updateEnemies();
+        updateEnemies();
+    }
 }
 
 void SpawnNewEnemy()
@@ -460,6 +464,7 @@ boolean isPlayerPointsInScore()
 void showGameOver()
 {
     formatBaseText(4);
+    tft.fillRect(10, 50, 220, 120, GAME_OVER_COLOR);
     showText(20, 60, F("GameOver"));
     formatBaseText(3);
     if (isPlayerPointsInScore()) {
@@ -474,7 +479,7 @@ void showGameOver()
 void updateGameOverSelector()
 {
     formatBaseText(3);
-    tft.fillRect(20, 130, 55, 25, BACKGROUND_COLOR);
+    tft.fillRect(20, 130, 55, 25, GAME_OVER_COLOR);
     showText(20, 130, playerName);
 }
 
@@ -521,7 +526,7 @@ void applyPlayerDamage()
 void updateEnemies()
 {
     for (uint8_t i = 0; i < MAX_ENEMIES; i++) {
-        if (enemies[i].active && (millis() - enemies[i].lastMovementUpdate > 50)) {
+        if (enemies[i].active && (millis() - enemies[i].lastMovementUpdate > DELAY_UPDATE_ENEMY)) {
             hideEnemy(i);
             if (enemies[i].positionY + 4 > 220) {
                 enemies[i].positionY = 0;
