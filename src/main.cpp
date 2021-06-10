@@ -6,44 +6,44 @@
 #include "SymbolMono18pt7b.h"
 
 // PINOS DISPLAY
-#define TFT_CS                  10
-#define TFT_RST                 8  // define reset pin, or set to -1 and connect to Arduino RESET pin
-#define TFT_DC                  9  // define data/command pin
+#define TFT_CS                      10
+#define TFT_RST                     8  // define reset pin, or set to -1 and connect to Arduino RESET pin
+#define TFT_DC                      9  // define data/command pin
 
 // PINOS BOTÕES
-#define BOTAOSELECIONAR_PIN     2 //botão para selecionar
-#define BOTAOCONFIRMAR_PIN      3 //botão para confirmar
+#define BUTTON_SELECT_PIN           2 //botão para selecionar
+#define BUTTON_CONFIRM_PIN          3 //botão para confirmar
 
 // DEFINIÇÕES DE ALINHAMENTO
-#define INICIO_LINHA_MENU       10
-#define TAMANHO_LINHA_MENU      38
+#define FIRST_LINE_MENU             10
+#define LINE_HEIGHT_MENU            38
 
 // TELAS
-#define NUMERO_TELAS            4
-#define TELA_MENU               0
-#define TELA_JOGAR              1
-#define TELA_RANKING            2
-#define TELA_CREDITOS           3
-#define TELA_SCORE              4
-#define TELA_GAME_OVER          5
+#define NUMBER_SCREENS              4
+#define SCREEN_MENU                 0
+#define SCREEN_PLAY                 1
+#define SCREEN_RANKING              2
+#define SCREEN_CREDITS              3
+#define SCREEN_SCORE                4
+#define SCREEN_GAME_OVER            5
 
-#define MOVIMENTO_NAVE_ESQ      8
-#define MOVIMENTO_NAVE_DIR      -8
-#define MOVIMENTO_TIRO          10
+#define MOVEMENT_DISTANCE_LEFT      8
+#define MOVEMENT_DISTANCE_RIGHT     -8
+#define MOVIMENTO_TIRO              10
 
-#define ATRASO_ATUALIZACAO_TIRO 20
-#define ATRASO_DISPARO          250
+#define DELAY_UPDATE_PROJECTILE     20
+#define DELAY_SHOT_PROJECTILE       250
 
 // CORES
-#define COR_TEXTO_BASE          0xFFE0
-#define COR_FUNDO               0x00
+#define BASE_TEXT_COLOR             0xFFE0
+#define BACKGROUND_COLOR            0x00
 
 // MAXIMO RANKING E MAXIMO NOME DO JOGADOR
-#define MAXIMO_RANKING          3
-#define MAXIMO_NOME_JOGADOR     4
-#define MAXIMO_TIROS            3
-#define MAXIMO_INIMIGOS         3
-#define MAXIMO_VIDAS            1
+#define MAX_RANKING_ENTRIES         3
+#define MAX_NAME_PLAYER             4
+#define MAX_PLAYER_PROJECTILES      3
+#define MAX_ENEMIES                 3
+#define MAX_PLAYER_LIVES            1
 
 void imprimirMenu();
 void ImprimirLogo();
@@ -115,26 +115,26 @@ typedef struct {
     boolean ativo;
 } inimigo;
 
-inimigo inimigos[MAXIMO_INIMIGOS] = {0, 0, 0, 0, 5, false};
+inimigo inimigos[MAX_ENEMIES] = {0, 0, 0, 0, 5, false};
 uint8_t totalInimigos = 0;
 
-tiro tiros[MAXIMO_TIROS] = {0, 0, 0, false};
+tiro tiros[MAX_PLAYER_PROJECTILES] = {0, 0, 0, false};
 uint8_t totalTiros = 0;
 
 uint8_t menuSelecionado = 1;
 uint8_t telaAtual = 0;
 
 uint8_t seletorNome = 0;
-char nomeJogador[MAXIMO_NOME_JOGADOR] = "A__";
-uint8_t totalVidas = MAXIMO_VIDAS;
+char nomeJogador[MAX_NAME_PLAYER] = "A__";
+uint8_t totalVidas = MAX_PLAYER_LIVES;
 uint16_t totalPontos = 0;
 uint8_t posicaoNave = 100;
 uint32_t delayNave = 0;
 
 uint32_t delayTiro = 0;
 
-uint32_t pontosRanking[MAXIMO_RANKING] = {0, 0, 0};
-char jogadores[MAXIMO_RANKING][MAXIMO_NOME_JOGADOR] = {"\0", "\0", "\0"};
+uint32_t pontosRanking[MAX_RANKING_ENTRIES] = {0, 0, 0};
+char jogadores[MAX_RANKING_ENTRIES][MAX_NAME_PLAYER] = {"\0", "\0", "\0"};
 
 void setup(void) {
     Serial.begin(9600);
@@ -146,8 +146,8 @@ void setup(void) {
     //ImprimirLogo();
     //delay(3000);
 
-    pinMode(BOTAOSELECIONAR_PIN, INPUT);
-    pinMode(BOTAOCONFIRMAR_PIN, INPUT);
+    pinMode(BUTTON_SELECT_PIN, INPUT);
+    pinMode(BUTTON_CONFIRM_PIN, INPUT);
 
     ordenarRanking();
     imprimirMenu();
@@ -165,7 +165,7 @@ void ImprimirLogo() {
 void formatarTextoBase(uint8_t tamanho)
 {
     tft.setTextSize(tamanho);
-    tft.setTextColor(COR_TEXTO_BASE);
+    tft.setTextColor(BASE_TEXT_COLOR);
 }
 
 void imprimirTexto(uint8_t x, uint8_t y, const __FlashStringHelper* texto)
@@ -187,8 +187,8 @@ void renderizarSimbolo(uint8_t x, uint8_t y, uint8_t c, uint16_t color, uint16_t
 }
 
 void exibirHUD() {
-    renderizarSimbolo(0, 20, GLYPH_HEART, COR_TEXTO_BASE,0,1);
-    tft.fillRect(24, 0, 75, 25, COR_FUNDO);
+    renderizarSimbolo(0, 20, GLYPH_HEART, BASE_TEXT_COLOR,0,1);
+    tft.fillRect(24, 0, 75, 25, BACKGROUND_COLOR);
     formatarTextoBase(2);
     imprimirTexto(25, 5, String(totalVidas));
     imprimirTexto(55, 5, String(totalPontos));
@@ -199,34 +199,34 @@ void imprimirMenu() {
 
 
     formatarTextoBase(4);
-    imprimirTexto(36, INICIO_LINHA_MENU + TAMANHO_LINHA_MENU, F("Jogar"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (2 * TAMANHO_LINHA_MENU), F("Ranking"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (3 * TAMANHO_LINHA_MENU), F("Creditos"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (4 * TAMANHO_LINHA_MENU), F("Opcoes"));
+    imprimirTexto(36, FIRST_LINE_MENU + LINE_HEIGHT_MENU, F("Jogar"));
+    imprimirTexto(36, FIRST_LINE_MENU + (2 * LINE_HEIGHT_MENU), F("Ranking"));
+    imprimirTexto(36, FIRST_LINE_MENU + (3 * LINE_HEIGHT_MENU), F("Creditos"));
+    imprimirTexto(36, FIRST_LINE_MENU + (4 * LINE_HEIGHT_MENU), F("Opcoes"));
 
     mostrarSeletorMenu();
 }
 
 void ocultarSeletorAnterior()
 {
-    tft.setTextColor(COR_FUNDO);
-    imprimirTexto(10, INICIO_LINHA_MENU + (menuSelecionado * TAMANHO_LINHA_MENU), F("\t"));   
+    tft.setTextColor(BACKGROUND_COLOR);
+    imprimirTexto(10, FIRST_LINE_MENU + (menuSelecionado * LINE_HEIGHT_MENU), F("\t"));   
     delay(20);
 }
 
 void mostrarSeletorMenu()
 {
-    tft.setTextColor(COR_TEXTO_BASE);
-    imprimirTexto(10, INICIO_LINHA_MENU + (menuSelecionado * TAMANHO_LINHA_MENU), F("\t"));
+    tft.setTextColor(BASE_TEXT_COLOR);
+    imprimirTexto(10, FIRST_LINE_MENU + (menuSelecionado * LINE_HEIGHT_MENU), F("\t"));
 }
 
 void atualizarSeletorMenu()
 {
     ocultarSeletorAnterior();
-    if (menuSelecionado < NUMERO_TELAS) {
+    if (menuSelecionado < NUMBER_SCREENS) {
         menuSelecionado++;
     } else {
-        menuSelecionado = TELA_JOGAR;
+        menuSelecionado = SCREEN_PLAY;
     }
     mostrarSeletorMenu();
 
@@ -237,11 +237,11 @@ void atualizarSeletorMenu()
 void selecionarOpcaoMenu()
 {
     switch (menuSelecionado) {
-        case TELA_JOGAR: iniciarJogo();
+        case SCREEN_PLAY: iniciarJogo();
             break;
-        case TELA_RANKING: imprimirRanking();
+        case SCREEN_RANKING: imprimirRanking();
             break;
-        case TELA_CREDITOS: creditos();
+        case SCREEN_CREDITS: creditos();
             break;
     }
     telaAtual = menuSelecionado;
@@ -254,7 +254,7 @@ void iniciarJogo()
     totalPontos = 0;
     seletorNome = 0;
     strcpy(nomeJogador, "A__");
-    totalVidas = MAXIMO_VIDAS;
+    totalVidas = MAX_PLAYER_LIVES;
 
     exibirHUD();
     renderizarNave();
@@ -265,10 +265,10 @@ void iniciarJogo()
 void atualizaJogo(int8_t esquerda, int8_t direita)
 {
     if (esquerda == HIGH) {
-        moverNave(MOVIMENTO_NAVE_DIR);
+        moverNave(MOVEMENT_DISTANCE_RIGHT);
     }
     if (direita == HIGH) {
-        moverNave(MOVIMENTO_NAVE_ESQ);
+        moverNave(MOVEMENT_DISTANCE_LEFT);
     }
     dispararTiro();
     atualizaDisparos();
@@ -277,9 +277,9 @@ void atualizaJogo(int8_t esquerda, int8_t direita)
 
 boolean dispararTiro()
 {
-    if (millis() - delayTiro > ATRASO_DISPARO) {
-        if (totalTiros < MAXIMO_TIROS) {
-            for (uint8_t i = 0; i < MAXIMO_TIROS; i++) {
+    if (millis() - delayTiro > DELAY_SHOT_PROJECTILE) {
+        if (totalTiros < MAX_PLAYER_PROJECTILES) {
+            for (uint8_t i = 0; i < MAX_PLAYER_PROJECTILES; i++) {
                 if (!tiros[i].ativo) {
                     tiros[i].posicaoX = posicaoNave + 14;
                     tiros[i].posicaoY = 205;
@@ -297,12 +297,12 @@ boolean dispararTiro()
 
 void renderizarTiro(uint8_t tiro)
 {
-    tft.drawRect(tiros[tiro].posicaoX, tiros[tiro].posicaoY, 2, 5, COR_TEXTO_BASE);
+    tft.drawRect(tiros[tiro].posicaoX, tiros[tiro].posicaoY, 2, 5, BASE_TEXT_COLOR);
 }
 
 void ocultarTiro(uint8_t tiro)
 {
-    tft.drawRect(tiros[tiro].posicaoX, tiros[tiro].posicaoY, 2, 5, COR_FUNDO);
+    tft.drawRect(tiros[tiro].posicaoX, tiros[tiro].posicaoY, 2, 5, BACKGROUND_COLOR);
 }
 
 void removerTiro(uint8_t tiro)
@@ -313,9 +313,9 @@ void removerTiro(uint8_t tiro)
 
 void atualizaDisparos()
 {
-    for(uint8_t i = 0; i < MAXIMO_TIROS; i++)
+    for(uint8_t i = 0; i < MAX_PLAYER_PROJECTILES; i++)
     {
-        if (tiros[i].ativo && (millis() - tiros[i].ultimaAtualizacao > ATRASO_ATUALIZACAO_TIRO)) {
+        if (tiros[i].ativo && (millis() - tiros[i].ultimaAtualizacao > DELAY_UPDATE_PROJECTILE)) {
             ocultarTiro(i);
             if (tiros[i].posicaoY - MOVIMENTO_TIRO > 0) {
                 tiros[i].posicaoY -= MOVIMENTO_TIRO;
@@ -325,7 +325,7 @@ void atualizaDisparos()
             }
             renderizarTiro(i);
             uint8_t inimigo = checarColisaoInimigos(tiros[i].posicaoX, tiros[i].posicaoY);
-            if(inimigo != MAXIMO_INIMIGOS)
+            if(inimigo != MAX_ENEMIES)
             {
                 somarPontos(10);
                 removerTiro(i);
@@ -362,14 +362,14 @@ boolean checarColisaoCirculo(uint8_t alvoX, uint8_t alvoY, uint8_t raioAlvo, uin
 
 uint8_t checarColisaoInimigos(uint8_t x, uint8_t y)
 {
-    for (uint8_t i = 0; i < MAXIMO_INIMIGOS; i++) {
+    for (uint8_t i = 0; i < MAX_ENEMIES; i++) {
         if (inimigos[i].ativo) {
             if (checarColisaoCirculo(inimigos[i].posicaoX, inimigos[i].posicaoY, 25, x, y)) {
                 return i;
             }
         }
     }
-    return MAXIMO_INIMIGOS;
+    return MAX_ENEMIES;
 }
 
 void ativarInimigo(uint8_t inimigo, uint8_t posicaoX, uint8_t posicaoY)
@@ -394,7 +394,7 @@ void removerInimigo(uint8_t inimigo)
 
 boolean checarRanking()
 {
-    if (totalPontos > pontosRanking[MAXIMO_RANKING - 1]) {
+    if (totalPontos > pontosRanking[MAX_RANKING_ENTRIES - 1]) {
         return true;
     }
     return false;
@@ -406,18 +406,18 @@ void imprimirTelaGameOver()
     imprimirTexto(20, 60, F("GameOver"));
     formatarTextoBase(3);
     if (checarRanking()) {
-        telaAtual = TELA_SCORE;
+        telaAtual = SCREEN_SCORE;
         imprimirTexto(20, 100, String(totalPontos));
         atualizarSeletorGameOver();
     } else {
-        telaAtual = TELA_GAME_OVER;
+        telaAtual = SCREEN_GAME_OVER;
     }
 }
 
 void atualizarSeletorGameOver()
 {
     formatarTextoBase(3);
-    tft.fillRect(20, 130, 55, 25, COR_FUNDO);
+    tft.fillRect(20, 130, 55, 25, BACKGROUND_COLOR);
     imprimirTexto(20, 130, nomeJogador);
 }
 
@@ -447,8 +447,8 @@ void atualizarNomeJogador(int8_t esquerda, int8_t direita)
 
 void atualizarRanking()
 {
-    strcpy(jogadores[MAXIMO_RANKING - 1], nomeJogador);
-    pontosRanking[MAXIMO_RANKING - 1] = totalPontos;
+    strcpy(jogadores[MAX_RANKING_ENTRIES - 1], nomeJogador);
+    pontosRanking[MAX_RANKING_ENTRIES - 1] = totalPontos;
     ordenarRanking();
 }
 
@@ -463,7 +463,7 @@ void perderVida()
 
 void atualizaInimigos()
 {
-    for (uint8_t i = 0; i < MAXIMO_INIMIGOS; i++) {
+    for (uint8_t i = 0; i < MAX_ENEMIES; i++) {
         if (inimigos[i].ativo && (millis() - inimigos[i].ultimoMovimento > 50)) {
             ocultarInimigo(i);
             if (inimigos[i].posicaoY + 4 > 220) {
@@ -485,7 +485,7 @@ void atualizaInimigos()
 
 void ocultarInimigo(uint8_t inimigo)
 {
-    renderizarInimigo(inimigo, COR_FUNDO);
+    renderizarInimigo(inimigo, BACKGROUND_COLOR);
 }
 
 void renderizarInimigo(uint8_t inimigo, uint16_t cor)
@@ -498,29 +498,29 @@ void creditos()
     limparTela();
     formatarTextoBase(3);
 
-    imprimirTexto(36, INICIO_LINHA_MENU + TAMANHO_LINHA_MENU, F("Creditos"));
+    imprimirTexto(36, FIRST_LINE_MENU + LINE_HEIGHT_MENU, F("Creditos"));
 
-    imprimirTexto(36, INICIO_LINHA_MENU + (2 * TAMANHO_LINHA_MENU), F("Gabriel"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (3 * TAMANHO_LINHA_MENU), F("Helcio"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (4 * TAMANHO_LINHA_MENU), F("Jean"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (5 * TAMANHO_LINHA_MENU), F("Kellwyn"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (6 * TAMANHO_LINHA_MENU), F("Rafael"));
-    imprimirTexto(36, INICIO_LINHA_MENU + (7 * TAMANHO_LINHA_MENU), F("Rennan"));
+    imprimirTexto(36, FIRST_LINE_MENU + (2 * LINE_HEIGHT_MENU), F("Gabriel"));
+    imprimirTexto(36, FIRST_LINE_MENU + (3 * LINE_HEIGHT_MENU), F("Helcio"));
+    imprimirTexto(36, FIRST_LINE_MENU + (4 * LINE_HEIGHT_MENU), F("Jean"));
+    imprimirTexto(36, FIRST_LINE_MENU + (5 * LINE_HEIGHT_MENU), F("Kellwyn"));
+    imprimirTexto(36, FIRST_LINE_MENU + (6 * LINE_HEIGHT_MENU), F("Rafael"));
+    imprimirTexto(36, FIRST_LINE_MENU + (7 * LINE_HEIGHT_MENU), F("Rennan"));
 }
 
 void limparTela()
 {
-    tft.fillScreen(COR_FUNDO); 
+    tft.fillScreen(BACKGROUND_COLOR); 
 }
 
 void imprimirRanking()
 {
     limparTela();
     formatarTextoBase(3);
-    imprimirTexto(36, INICIO_LINHA_MENU + TAMANHO_LINHA_MENU, F("Ranking"));
+    imprimirTexto(36, FIRST_LINE_MENU + LINE_HEIGHT_MENU, F("Ranking"));
 
     for (int i = 0; i < 3; i++) {
-        tft.setCursor(36, INICIO_LINHA_MENU + ((i + 2) * TAMANHO_LINHA_MENU));
+        tft.setCursor(36, FIRST_LINE_MENU + ((i + 2) * LINE_HEIGHT_MENU));
         tft.print(jogadores[i]);
         tft.print (": ");
         tft.print(pontosRanking[i]);
@@ -557,15 +557,15 @@ void renderizarNave()
 
 void ocultarNave()
 {
-    tft.drawBitmap(posicaoNave, 200, nave, 32, 32, COR_FUNDO);
+    tft.drawBitmap(posicaoNave, 200, nave, 32, 32, BACKGROUND_COLOR);
 }
 
 void ordenarRanking()
 {
     uint8_t i, j;
     uint32_t troca;
-    char trocaNome[MAXIMO_NOME_JOGADOR];
-    for (i = 0; i < MAXIMO_RANKING - 1; i++) {
+    char trocaNome[MAX_NAME_PLAYER];
+    for (i = 0; i < MAX_RANKING_ENTRIES - 1; i++) {
         for (j = i + 1; j < 3; j++) {
             if (pontosRanking[j] > pontosRanking[i]) {
                 troca = pontosRanking[j];
@@ -581,17 +581,17 @@ void ordenarRanking()
 
 void voltarMenu()
 {
-    telaAtual = TELA_MENU;
+    telaAtual = SCREEN_MENU;
     imprimirMenu();
 }
 
 void loop() {
-    int8_t selecionaEstado = digitalRead(BOTAOSELECIONAR_PIN);
-    int8_t confirmaEstado = digitalRead(BOTAOCONFIRMAR_PIN);
-    if (telaAtual == TELA_JOGAR) {
+    int8_t selecionaEstado = digitalRead(BUTTON_SELECT_PIN);
+    int8_t confirmaEstado = digitalRead(BUTTON_CONFIRM_PIN);
+    if (telaAtual == SCREEN_PLAY) {
         atualizaJogo(selecionaEstado, confirmaEstado);
     } else {
-        if (telaAtual == TELA_MENU) {
+        if (telaAtual == SCREEN_MENU) {
             if (selecionaEstado == HIGH) {
                 atualizarSeletorMenu();
             }
@@ -599,7 +599,7 @@ void loop() {
                 selecionarOpcaoMenu();
             }
         } else {
-            if (telaAtual == TELA_SCORE) {
+            if (telaAtual == SCREEN_SCORE) {
                 atualizarNomeJogador(selecionaEstado, confirmaEstado);
             } else {
                 if (selecionaEstado == HIGH || confirmaEstado == HIGH) {
