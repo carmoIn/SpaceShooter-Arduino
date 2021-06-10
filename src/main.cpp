@@ -62,6 +62,7 @@ void moverNave(int8_t x);
 void renderizarNave();
 void ocultarNave();
 
+void somarPontos(uint16_t pontos);
 void limparTela();
 void formatarTextoBase(uint8_t tamanho);
 void imprimirTexto(uint8_t x, uint8_t y, const __FlashStringHelper* texto);
@@ -111,10 +112,10 @@ typedef struct {
     boolean ativo;
 } inimigo;
 
-inimigo inimigos[MAXIMO_INIMIGOS];
+inimigo inimigos[MAXIMO_INIMIGOS] = {0, 0, 0, 0, false};
 uint8_t totalInimigos = 0;
 
-tiro tiros[MAXIMO_TIROS];
+tiro tiros[MAXIMO_TIROS] = {0, 0, 0, false};
 uint8_t totalTiros = 0;
 
 uint8_t menuSelecionado = 1;
@@ -184,9 +185,10 @@ void renderizarSimbolo(uint8_t x, uint8_t y, uint8_t c, uint16_t color, uint16_t
 
 void exibirHUD() {
     renderizarSimbolo(0, 20, GLYPH_HEART, COR_TEXTO_BASE,0,1);
-    tft.fillRect(24, 0, 50, 25, COR_FUNDO);
+    tft.fillRect(24, 0, 75, 25, COR_FUNDO);
     formatarTextoBase(2);
     imprimirTexto(25, 5, String(totalVidas));
+    imprimirTexto(55, 5, String(totalPontos));
 }
 
 void imprimirMenu() {
@@ -322,7 +324,7 @@ void atualizaDisparos()
             uint8_t inimigo = checarColisaoInimigos(tiros[i].posicaoX, tiros[i].posicaoY);
             if(inimigo != MAXIMO_INIMIGOS)
             {
-                totalPontos += 10;
+                somarPontos(10);
                 removerTiro(i);
                 inimigos[inimigo].ultimoDano = millis();
                 renderizarInimigo(inimigo, ST77XX_RED);
@@ -330,6 +332,12 @@ void atualizaDisparos()
             tiros[i].ultimaAtualizacao = millis();
         }
     }
+}
+
+void somarPontos(uint16_t pontos)
+{
+    totalPontos += 10;
+    exibirHUD();
 }
 
 boolean checarColisaoCirculo(uint8_t alvoX, uint8_t alvoY, uint8_t raioAlvo, uint8_t x, uint8_t y)
@@ -340,8 +348,10 @@ boolean checarColisaoCirculo(uint8_t alvoX, uint8_t alvoY, uint8_t raioAlvo, uin
 uint8_t checarColisaoInimigos(uint8_t x, uint8_t y)
 {
     for (uint8_t i = 0; i < MAXIMO_INIMIGOS; i++) {
-        if (checarColisaoCirculo(inimigos[i].posicaoX, inimigos[i].posicaoY, 25, x, y)) {
-            return i;
+        if (inimigos[i].ativo) {
+            if (checarColisaoCirculo(inimigos[i].posicaoX, inimigos[i].posicaoY, 25, x, y)) {
+                return i;
+            }
         }
     }
     return MAXIMO_INIMIGOS;
