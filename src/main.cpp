@@ -38,6 +38,8 @@
 // CORES
 #define BASE_TEXT_COLOR             0xFFE0
 #define BACKGROUND_COLOR            0x0000
+#define ACTOR_COLOR                 0xFFFF
+#define ACTOR_DAMAGE_COLOR          0xF800
 
 // MAXIMO RANKING E MAXIMO NOME DO JOGADOR
 #define MAX_RANKING_ENTRIES         3
@@ -68,7 +70,7 @@ void clearScreen();
 void formatBaseText(uint8_t size);
 void showText(uint8_t x, uint8_t y, const __FlashStringHelper* text);
 
-void renderEnemy(uint8_t enemy, uint16_t color = ST77XX_WHITE);
+void renderEnemy(uint8_t enemy, uint16_t color = ACTOR_COLOR);
 
 void updateProjectiles();
 void updateRanking();
@@ -393,7 +395,7 @@ void applyEnemyDamage(uint8_t enemy, uint8_t damage)
     {
         enemies[enemy].hp -= damage;
         enemies[enemy].lastDamageUpdate = millis();
-        renderEnemy(enemy, ST77XX_RED);
+        renderEnemy(enemy, ACTOR_DAMAGE_COLOR);
     } else  {
         enemies[enemy].hp = 0;
         removeEnemy(enemy);
@@ -531,7 +533,7 @@ void updateEnemies()
             if (millis() - enemies[i].lastDamageUpdate > 150) {
                 renderEnemy(i);
             } else {
-                renderEnemy(i, ST77XX_RED);
+                renderEnemy(i, ACTOR_DAMAGE_COLOR);
             }
             enemies[i].lastMovementUpdate = millis();
         }
@@ -607,7 +609,7 @@ void movePlayerShip(int8_t x)
 
 void renderPlayerShip()
 {
-    tft.drawBitmap(playerPositionX, 200, playerShipBitmap, 32, 32, ST77XX_WHITE);
+    tft.drawBitmap(playerPositionX, 200, playerShipBitmap, 32, 32, ACTOR_COLOR);
 }
 
 void hidePlayerShip()
