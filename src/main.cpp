@@ -44,7 +44,7 @@
 #define MAX_NAME_PLAYER             4
 #define MAX_PLAYER_PROJECTILES      3
 #define MAX_ENEMIES                 3
-#define MAX_PLAYER_LIVES            1
+#define MAX_PLAYER_LIVES            3
 
 void showMainMenu();
 void showLogo();
@@ -91,6 +91,7 @@ boolean isPlayerPointsInScore();
 void showGameOver();
 void applyPlayerDamage();
 void SpawnNewEnemy();
+void resetGameVariables();
 
 const unsigned char playerShipBitmap[] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -259,13 +260,39 @@ void initGame()
 {
     clearScreen();
     delay(1000);  
-    totalPoints = 0;
-    playerNameSelector = 0;
-    strcpy(playerName, "A__");
-    totalLives = MAX_PLAYER_LIVES;
+
+    resetGameVariables();
 
     showHUD();
     renderPlayerShip();
+}
+
+void resetGameVariables()
+{
+    lastPlayerShotUpdate = 0;
+    lastSpawnEnemyUpdate = 0;
+    totalPoints = 0;
+    playerPositionX = 100;
+    lastPlayerMovementUpdate = 0;
+
+    for (uint8_t i = 0; i < MAX_ENEMIES; i++)
+    {
+        enemies[i].active = false;
+    }
+
+    for (uint8_t i = 0; i < MAX_PLAYER_PROJECTILES; i++)
+    {
+        playerProjectiles[i].active = false;
+    }
+
+    totalEnemies = 0;
+
+    totalPlayerProjectiles = 0;
+
+    playerNameSelector = 0;
+    strcpy(playerName, "A__");
+
+    totalLives = MAX_PLAYER_LIVES;
 }
 
 void updateGame(int8_t leftInput, int8_t rightInput)
@@ -290,7 +317,7 @@ void SpawnNewEnemy()
         lastSpawnEnemyUpdate = millis();
         for (uint8_t i = 0; i < MAX_ENEMIES; i++) {
             if (!enemies[i].active) {
-                enableEnemy(i, random(10, 180), random(10, 20));
+                enableEnemy(i, random(10, 180), 0);
                 break;
             }
         }
