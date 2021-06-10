@@ -202,11 +202,11 @@ void renderizarSimbolo(uint8_t x, uint8_t y, uint8_t c, uint16_t color, uint16_t
 }
 
 void showHUD() {
-    renderizarSimbolo(0, 20, GLYPH_HEART, BASE_TEXT_COLOR,0,1);
-    tft.fillRect(24, 0, 75, 25, BACKGROUND_COLOR);
+    renderizarSimbolo(0, 240, GLYPH_HEART, BASE_TEXT_COLOR,0,1);
+    tft.fillRect(24, 225, 75, 25, BACKGROUND_COLOR);
     formatBaseText(2);
-    showText(25, 5, String(totalLives));
-    showText(55, 5, String(totalPoints));
+    showText(25, 225, String(totalLives));
+    showText(55, 225, String(totalPoints));
 }
 
 void showMainMenu() {
