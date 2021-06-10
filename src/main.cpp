@@ -36,7 +36,7 @@
 
 // CORES
 #define BASE_TEXT_COLOR             0xFFE0
-#define BACKGROUND_COLOR            0x00
+#define BACKGROUND_COLOR            0x0000
 
 // MAXIMO RANKING E MAXIMO NOME DO JOGADOR
 #define MAX_RANKING_ENTRIES         3
@@ -74,11 +74,21 @@ boolean shootPlayerProjectile();
 void updateEnemies();
 void removeEnemy(uint8_t enemy);
 void applyEnemyDamage(uint8_t enemy, uint8_t damage);
-void renderProjectile(uint8_t projectile);
+void renderPlayerProjectile(uint8_t projectile);
 void hideEnemy(uint8_t enemy);
 void updateGameOverSelector();
 void updatePlayerName(int8_t leftInput, int8_t rightInput);
 uint8_t checkEnemyCollision(uint8_t x, uint8_t y);
+
+void updateGame(int8_t leftInput, int8_t rightInput);
+void hidePlayerProjectile(uint8_t projectile);
+void removePlayerProjectile(uint8_t projectile);
+void hidePlayerProjectile(uint8_t projectile);
+void applyEnemyDamage(uint8_t enemy, uint8_t damage);
+boolean isPointInCircle(uint8_t targetX, uint8_t targetY, uint8_t targetRadius, uint8_t x, uint8_t y);
+boolean isPlayerPointsInScore();
+void showGameOver();
+void applyPlayerDamage();
 
 
 const unsigned char playerShipBitmap[] PROGMEM = {
@@ -182,7 +192,7 @@ void renderizarSimbolo(uint8_t x, uint8_t y, uint8_t c, uint16_t color, uint16_t
     tft.setFont();
 }
 
-void exibirHUD() {
+void showHUD() {
     renderizarSimbolo(0, 20, GLYPH_HEART, BASE_TEXT_COLOR,0,1);
     tft.fillRect(24, 0, 75, 25, BACKGROUND_COLOR);
     formatBaseText(2);
@@ -252,13 +262,13 @@ void initGame()
     strcpy(playerName, "A__");
     totalLives = MAX_PLAYER_LIVES;
 
-    exibirHUD();
+    showHUD();
     renderPlayerShip();
 
     enableEnemy(0, 120, 35);
 }
 
-void atualizaJogo(int8_t leftInput, int8_t rightInput)
+void updateGame(int8_t leftInput, int8_t rightInput)
 {
     if (leftInput == HIGH) {
         movePlayerShip(MOVEMENT_DISTANCE_RIGHT);
@@ -282,7 +292,7 @@ boolean shootPlayerProjectile()
                     playerProjectiles[i].lastUpdate = 0;
                     playerProjectiles[i].active = true;
                     lastPlayerShotUpdate = millis();
-                    renderProjectile(i);
+                    renderPlayerProjectile(i);
                     return true;
                 }
             }
@@ -291,20 +301,20 @@ boolean shootPlayerProjectile()
     return false;
 }
 
-void renderProjectile(uint8_t projectile)
+void renderPlayerProjectile(uint8_t projectile)
 {
     tft.drawRect(playerProjectiles[projectile].positionX, playerProjectiles[projectile].positionY, 2, 5, BASE_TEXT_COLOR);
 }
 
-void ocultarTiro(uint8_t projectile)
+void hidePlayerProjectile(uint8_t projectile)
 {
     tft.drawRect(playerProjectiles[projectile].positionX, playerProjectiles[projectile].positionY, 2, 5, BACKGROUND_COLOR);
 }
 
-void removerTiro(uint8_t projectile)
+void removePlayerProjectile(uint8_t projectile)
 {
     playerProjectiles[projectile].active = false;
-    ocultarTiro(projectile);
+    hidePlayerProjectile(projectile);
 }
 
 void updateProjectiles()
@@ -312,19 +322,19 @@ void updateProjectiles()
     for(uint8_t i = 0; i < MAX_PLAYER_PROJECTILES; i++)
     {
         if (playerProjectiles[i].active && (millis() - playerProjectiles[i].lastUpdate > DELAY_UPDATE_PROJECTILE)) {
-            ocultarTiro(i);
+            hidePlayerProjectile(i);
             if (playerProjectiles[i].positionY - MOVIMENTO_TIRO > 0) {
                 playerProjectiles[i].positionY -= MOVIMENTO_TIRO;
             } else {
-                removerTiro(i);
+                removePlayerProjectile(i);
                 return;
             }
-            renderProjectile(i);
+            renderPlayerProjectile(i);
             uint8_t enemy = checkEnemyCollision(playerProjectiles[i].positionX, playerProjectiles[i].positionY);
             if(enemy != MAX_ENEMIES)
             {
                 addPoints(10);
-                removerTiro(i);
+                removePlayerProjectile(i);
                 applyEnemyDamage(enemy, 1);
             }
             playerProjectiles[i].lastUpdate = millis();
@@ -348,19 +358,19 @@ void applyEnemyDamage(uint8_t enemy, uint8_t damage)
 void addPoints(uint16_t points)
 {
     totalPoints += 10;
-    exibirHUD();
+    showHUD();
 }
 
-boolean checarColisaoCirculo(uint8_t alvoX, uint8_t alvoY, uint8_t raioAlvo, uint8_t x, uint8_t y)
+boolean isPointInCircle(uint8_t targetX, uint8_t targetY, uint8_t targetRadius, uint8_t x, uint8_t y)
 {
-    return (pow(x - alvoX, 2) + pow(y - alvoY, 2)) < pow(raioAlvo, 2);
+    return (pow(x - targetX, 2) + pow(y - targetY, 2)) < pow(targetRadius, 2);
 }
 
 uint8_t checkEnemyCollision(uint8_t x, uint8_t y)
 {
     for (uint8_t i = 0; i < MAX_ENEMIES; i++) {
         if (enemies[i].active) {
-            if (checarColisaoCirculo(enemies[i].positionX, enemies[i].positionY, 25, x, y)) {
+            if (isPointInCircle(enemies[i].positionX, enemies[i].positionY, 25, x, y)) {
                 return i;
             }
         }
@@ -388,7 +398,7 @@ void removeEnemy(uint8_t enemy)
     hideEnemy(enemy);
 }
 
-boolean checarRanking()
+boolean isPlayerPointsInScore()
 {
     if (totalPoints > rankingPoints[MAX_RANKING_ENTRIES - 1]) {
         return true;
@@ -396,12 +406,12 @@ boolean checarRanking()
     return false;
 }
 
-void imprimirTelaGameOver()
+void showGameOver()
 {
     formatBaseText(4);
     showText(20, 60, F("GameOver"));
     formatBaseText(3);
-    if (checarRanking()) {
+    if (isPlayerPointsInScore()) {
         currentScreen = SCREEN_SCORE;
         showText(20, 100, String(totalPoints));
         updateGameOverSelector();
@@ -419,7 +429,7 @@ void updateGameOverSelector()
 
 void updatePlayerName(int8_t leftInput, int8_t rightInput)
 {
-    checarRanking();
+    isPlayerPointsInScore();
     if (leftInput == HIGH) {
         if (playerName[playerNameSelector] >= 'A' && playerName[playerNameSelector] < 'Z') {
             playerName[playerNameSelector] += 1;
@@ -448,13 +458,13 @@ void updateRanking()
     sortRanking();
 }
 
-void perderVida()
+void applyPlayerDamage()
 {
     if (totalLives <= 1) {
-        imprimirTelaGameOver();
+        showGameOver();
     }
     totalLives--;
-    exibirHUD();
+    showHUD();
 }
 
 void updateEnemies()
@@ -465,7 +475,7 @@ void updateEnemies()
             if (enemies[i].positionY + 4 > 220) {
                 enemies[i].positionY = 0;
 
-                perderVida();
+                applyPlayerDamage();
             } else {
                 enemies[i].positionY += 4;
             }
@@ -585,7 +595,7 @@ void loop() {
     int8_t selectInput = digitalRead(BUTTON_SELECT_PIN);
     int8_t confirmInput = digitalRead(BUTTON_CONFIRM_PIN);
     if (currentScreen == SCREEN_PLAY) {
-        atualizaJogo(selectInput, confirmInput);
+        updateGame(selectInput, confirmInput);
     } else {
         if (currentScreen == SCREEN_MENU) {
             if (selectInput == HIGH) {
