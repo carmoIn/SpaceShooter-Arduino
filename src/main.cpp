@@ -46,6 +46,8 @@
 #define MAX_ENEMIES                 3
 #define MAX_PLAYER_LIVES            3
 
+#define DEATH_STAR_RADIUS           20
+
 void showMainMenu();
 void showLogo();
 void hidePreviousSelector();
@@ -413,7 +415,7 @@ uint8_t checkEnemyCollision(uint8_t x, uint8_t y)
 {
     for (uint8_t i = 0; i < MAX_ENEMIES; i++) {
         if (enemies[i].active) {
-            if (isPointInCircle(enemies[i].positionX, enemies[i].positionY, 25, x, y)) {
+            if (isPointInCircle(enemies[i].positionX, enemies[i].positionY, DEATH_STAR_RADIUS, x, y)) {
                 return i;
             }
         }
@@ -543,7 +545,7 @@ void hideEnemy(uint8_t enemy)
 
 void renderEnemy(uint8_t enemy, uint16_t color)
 {
-    tft.fillCircle(enemies[enemy].positionX, enemies[enemy].positionY, 25, color);
+    tft.fillCircle(enemies[enemy].positionX, enemies[enemy].positionY, DEATH_STAR_RADIUS, color);
 }
 
 void showCredits()
