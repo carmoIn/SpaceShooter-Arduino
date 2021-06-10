@@ -77,7 +77,7 @@ void applyEnemyDamage(uint8_t enemy, uint8_t damage);
 void renderProjectile(uint8_t projectile);
 void hideEnemy(uint8_t enemy);
 void updateGameOverSelector();
-void updatePlayerName(int8_t inputLeft, int8_t inputRight);
+void updatePlayerName(int8_t leftInput, int8_t rightInput);
 uint8_t checkEnemyCollision(uint8_t x, uint8_t y);
 
 
@@ -258,12 +258,12 @@ void initGame()
     enableEnemy(0, 120, 35);
 }
 
-void atualizaJogo(int8_t inputLeft, int8_t inputRight)
+void atualizaJogo(int8_t leftInput, int8_t rightInput)
 {
-    if (inputLeft == HIGH) {
+    if (leftInput == HIGH) {
         movePlayerShip(MOVEMENT_DISTANCE_RIGHT);
     }
-    if (inputRight == HIGH) {
+    if (rightInput == HIGH) {
         movePlayerShip(MOVEMENT_DISTANCE_LEFT);
     }
     shootPlayerProjectile();
@@ -417,10 +417,10 @@ void updateGameOverSelector()
     showText(20, 130, playerName);
 }
 
-void updatePlayerName(int8_t inputLeft, int8_t inputRight)
+void updatePlayerName(int8_t leftInput, int8_t rightInput)
 {
     checarRanking();
-    if (inputLeft == HIGH) {
+    if (leftInput == HIGH) {
         if (playerName[playerNameSelector] >= 'A' && playerName[playerNameSelector] < 'Z') {
             playerName[playerNameSelector] += 1;
         } else {
@@ -428,7 +428,7 @@ void updatePlayerName(int8_t inputLeft, int8_t inputRight)
         }
         updateGameOverSelector();
     }
-    if (inputRight == HIGH) {
+    if (rightInput == HIGH) {
         if (playerNameSelector < 2) {
             playerNameSelector++;
             playerName[playerNameSelector] = 'A';
@@ -529,12 +529,12 @@ void movePlayerShip(int8_t x)
         (x < 0 && playerPositionX > 0)) && (millis() - lastPlayerMovementUpdate > 18)) {
         hidePlayerShip();
         
-        if (x > 0) { // inputRight positivo
+        if (x > 0) { // rightInput positivo
             if (playerPositionX > 215) {
                 playerPositionX = 215;
             }
             playerPositionX += x;
-        } else { // inputLeft (negativo)
+        } else { // leftInput (negativo)
             if(playerPositionX + x > 0) {
                 playerPositionX += x;
             } else {
@@ -559,17 +559,17 @@ void hidePlayerShip()
 void sortRanking()
 {
     uint8_t i, j;
-    uint32_t troca;
-    char trocaNome[MAX_NAME_PLAYER];
+    uint32_t swapPoints;
+    char swapName[MAX_NAME_PLAYER];
     for (i = 0; i < MAX_RANKING_ENTRIES - 1; i++) {
         for (j = i + 1; j < 3; j++) {
             if (rankingPoints[j] > rankingPoints[i]) {
-                troca = rankingPoints[j];
+                swapPoints = rankingPoints[j];
                 rankingPoints[j] = rankingPoints[i];
-                rankingPoints[i] = troca;
-                strcpy(trocaNome, playersNames[j]);
+                rankingPoints[i] = swapPoints;
+                strcpy(swapName, playersNames[j]);
                 strcpy(playersNames[j], playersNames[i]);
-                strcpy(playersNames[i], trocaNome);
+                strcpy(playersNames[i], swapName);
             }
         }
     }
@@ -582,23 +582,23 @@ void backMainMenu()
 }
 
 void loop() {
-    int8_t selecionaEstado = digitalRead(BUTTON_SELECT_PIN);
-    int8_t confirmaEstado = digitalRead(BUTTON_CONFIRM_PIN);
+    int8_t selectInput = digitalRead(BUTTON_SELECT_PIN);
+    int8_t confirmInput = digitalRead(BUTTON_CONFIRM_PIN);
     if (currentScreen == SCREEN_PLAY) {
-        atualizaJogo(selecionaEstado, confirmaEstado);
+        atualizaJogo(selectInput, confirmInput);
     } else {
         if (currentScreen == SCREEN_MENU) {
-            if (selecionaEstado == HIGH) {
+            if (selectInput == HIGH) {
                 updateMenuSelector();
             }
-            if (confirmaEstado == HIGH) {
+            if (confirmInput == HIGH) {
                 selectMenuOption();
             }
         } else {
             if (currentScreen == SCREEN_SCORE) {
-                updatePlayerName(selecionaEstado, confirmaEstado);
+                updatePlayerName(selectInput, confirmInput);
             } else {
-                if (selecionaEstado == HIGH || confirmaEstado == HIGH) {
+                if (selectInput == HIGH || confirmInput == HIGH) {
                     backMainMenu();
                 }
             }
