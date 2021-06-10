@@ -60,24 +60,24 @@ void movePlayerShip(int8_t x);
 void renderPlayerShip();
 void hidePlayerShip();
 
-void addPoints(uint16_t pontos);
+void addPoints(uint16_t points);
 void clearScreen();
-void formatBaseText(uint8_t tamanho);
-void showText(uint8_t x, uint8_t y, const __FlashStringHelper* texto);
+void formatBaseText(uint8_t size);
+void showText(uint8_t x, uint8_t y, const __FlashStringHelper* text);
 
-void renderEnemy(uint8_t inimigo, uint16_t cor = ST77XX_WHITE);
+void renderEnemy(uint8_t enemy, uint16_t color = ST77XX_WHITE);
 
 void updateProjectiles();
 void updateRanking();
-void enableEnemy(uint8_t inimigo, uint8_t positionX, uint8_t positionY);
+void enableEnemy(uint8_t enemy, uint8_t positionX, uint8_t positionY);
 boolean shootPlayerProjectile();
 void updateEnemies();
-void removeEnemy(uint8_t inimigo);
-void applyEnemyDamage(uint8_t inimigo, uint8_t dano);
-void renderProjectile(uint8_t tiro);
-void hideEnemy(uint8_t inimigo);
+void removeEnemy(uint8_t enemy);
+void applyEnemyDamage(uint8_t enemy, uint8_t damage);
+void renderProjectile(uint8_t projectile);
+void hideEnemy(uint8_t enemy);
 void updateGameOverSelector();
-void updatePlayerName(int8_t esquerda, int8_t direita);
+void updatePlayerName(int8_t inputLeft, int8_t inputRight);
 uint8_t checkEnemyCollision(uint8_t x, uint8_t y);
 
 
@@ -100,7 +100,7 @@ typedef struct {
     uint8_t positionY;
     uint32_t lastUpdate;
     boolean active;
-} tiro;
+} projectile;
 
 typedef struct {
     uint8_t positionX;
@@ -109,12 +109,12 @@ typedef struct {
     uint32_t lastMovementUpdate;
     uint8_t hp;
     boolean active;
-} inimigo;
+} enemy;
 
-inimigo enemies[MAX_ENEMIES] = {0, 0, 0, 0, 5, false};
+enemy enemies[MAX_ENEMIES] = {0, 0, 0, 0, 5, false};
 uint8_t totalEnemies = 0;
 
-tiro playerProjectiles[MAX_PLAYER_PROJECTILES] = {0, 0, 0, false};
+projectile playerProjectiles[MAX_PLAYER_PROJECTILES] = {0, 0, 0, false};
 uint8_t totalPlayerProjectiles = 0;
 
 uint8_t currentMenuOption = 1;
@@ -158,22 +158,22 @@ void showLogo() {
     showText(40, 160, F("Star"));
 }
 
-void formatBaseText(uint8_t tamanho)
+void formatBaseText(uint8_t size)
 {
-    tft.setTextSize(tamanho);
+    tft.setTextSize(size);
     tft.setTextColor(BASE_TEXT_COLOR);
 }
 
-void showText(uint8_t x, uint8_t y, const __FlashStringHelper* texto)
+void showText(uint8_t x, uint8_t y, const __FlashStringHelper* text)
 {
     tft.setCursor(x, y);
-    tft.print(texto);    
+    tft.print(text);    
 }
 
-void showText(uint8_t x, uint8_t y, const String texto)
+void showText(uint8_t x, uint8_t y, const String text)
 {
     tft.setCursor(x, y);
-    tft.print(texto);    
+    tft.print(text);    
 }
 
 void renderizarSimbolo(uint8_t x, uint8_t y, uint8_t c, uint16_t color, uint16_t bg, uint8_t Size){
@@ -258,12 +258,12 @@ void initGame()
     enableEnemy(0, 120, 35);
 }
 
-void atualizaJogo(int8_t esquerda, int8_t direita)
+void atualizaJogo(int8_t inputLeft, int8_t inputRight)
 {
-    if (esquerda == HIGH) {
+    if (inputLeft == HIGH) {
         movePlayerShip(MOVEMENT_DISTANCE_RIGHT);
     }
-    if (direita == HIGH) {
+    if (inputRight == HIGH) {
         movePlayerShip(MOVEMENT_DISTANCE_LEFT);
     }
     shootPlayerProjectile();
@@ -291,20 +291,20 @@ boolean shootPlayerProjectile()
     return false;
 }
 
-void renderProjectile(uint8_t tiro)
+void renderProjectile(uint8_t projectile)
 {
-    tft.drawRect(playerProjectiles[tiro].positionX, playerProjectiles[tiro].positionY, 2, 5, BASE_TEXT_COLOR);
+    tft.drawRect(playerProjectiles[projectile].positionX, playerProjectiles[projectile].positionY, 2, 5, BASE_TEXT_COLOR);
 }
 
-void ocultarTiro(uint8_t tiro)
+void ocultarTiro(uint8_t projectile)
 {
-    tft.drawRect(playerProjectiles[tiro].positionX, playerProjectiles[tiro].positionY, 2, 5, BACKGROUND_COLOR);
+    tft.drawRect(playerProjectiles[projectile].positionX, playerProjectiles[projectile].positionY, 2, 5, BACKGROUND_COLOR);
 }
 
-void removerTiro(uint8_t tiro)
+void removerTiro(uint8_t projectile)
 {
-    playerProjectiles[tiro].active = false;
-    ocultarTiro(tiro);
+    playerProjectiles[projectile].active = false;
+    ocultarTiro(projectile);
 }
 
 void updateProjectiles()
@@ -320,32 +320,32 @@ void updateProjectiles()
                 return;
             }
             renderProjectile(i);
-            uint8_t inimigo = checkEnemyCollision(playerProjectiles[i].positionX, playerProjectiles[i].positionY);
-            if(inimigo != MAX_ENEMIES)
+            uint8_t enemy = checkEnemyCollision(playerProjectiles[i].positionX, playerProjectiles[i].positionY);
+            if(enemy != MAX_ENEMIES)
             {
                 addPoints(10);
                 removerTiro(i);
-                applyEnemyDamage(inimigo, 1);
+                applyEnemyDamage(enemy, 1);
             }
             playerProjectiles[i].lastUpdate = millis();
         }
     }
 }
 
-void applyEnemyDamage(uint8_t inimigo, uint8_t dano)
+void applyEnemyDamage(uint8_t enemy, uint8_t damage)
 {
-    if (enemies[inimigo].hp - dano > 0)
+    if (enemies[enemy].hp - damage > 0)
     {
-        enemies[inimigo].hp -= dano;
-        enemies[inimigo].lastDamageUpdate = millis();
-        renderEnemy(inimigo, ST77XX_RED);
+        enemies[enemy].hp -= damage;
+        enemies[enemy].lastDamageUpdate = millis();
+        renderEnemy(enemy, ST77XX_RED);
     } else  {
-        enemies[inimigo].hp = 0;
-        removeEnemy(inimigo);
+        enemies[enemy].hp = 0;
+        removeEnemy(enemy);
     }
 }
 
-void addPoints(uint16_t pontos)
+void addPoints(uint16_t points)
 {
     totalPoints += 10;
     exibirHUD();
@@ -368,24 +368,24 @@ uint8_t checkEnemyCollision(uint8_t x, uint8_t y)
     return MAX_ENEMIES;
 }
 
-void enableEnemy(uint8_t inimigo, uint8_t positionX, uint8_t positionY)
+void enableEnemy(uint8_t enemy, uint8_t positionX, uint8_t positionY)
 {
-    if (!enemies[inimigo].active) {
-        enemies[inimigo].positionX = positionX;
-        enemies[inimigo].positionY = positionY;
-        enemies[inimigo].lastDamageUpdate = 0;
-        enemies[inimigo].lastMovementUpdate = 0;
-        enemies[inimigo].active = true;
-        enemies[inimigo].hp = 5;
+    if (!enemies[enemy].active) {
+        enemies[enemy].positionX = positionX;
+        enemies[enemy].positionY = positionY;
+        enemies[enemy].lastDamageUpdate = 0;
+        enemies[enemy].lastMovementUpdate = 0;
+        enemies[enemy].active = true;
+        enemies[enemy].hp = 5;
 
-        renderEnemy(inimigo);
+        renderEnemy(enemy);
     }
 }
 
-void removeEnemy(uint8_t inimigo)
+void removeEnemy(uint8_t enemy)
 {
-    enemies[inimigo].active = false;
-    hideEnemy(inimigo);
+    enemies[enemy].active = false;
+    hideEnemy(enemy);
 }
 
 boolean checarRanking()
@@ -417,10 +417,10 @@ void updateGameOverSelector()
     showText(20, 130, playerName);
 }
 
-void updatePlayerName(int8_t esquerda, int8_t direita)
+void updatePlayerName(int8_t inputLeft, int8_t inputRight)
 {
     checarRanking();
-    if (esquerda == HIGH) {
+    if (inputLeft == HIGH) {
         if (playerName[playerNameSelector] >= 'A' && playerName[playerNameSelector] < 'Z') {
             playerName[playerNameSelector] += 1;
         } else {
@@ -428,7 +428,7 @@ void updatePlayerName(int8_t esquerda, int8_t direita)
         }
         updateGameOverSelector();
     }
-    if (direita == HIGH) {
+    if (inputRight == HIGH) {
         if (playerNameSelector < 2) {
             playerNameSelector++;
             playerName[playerNameSelector] = 'A';
@@ -479,14 +479,14 @@ void updateEnemies()
     }
 }
 
-void hideEnemy(uint8_t inimigo)
+void hideEnemy(uint8_t enemy)
 {
-    renderEnemy(inimigo, BACKGROUND_COLOR);
+    renderEnemy(enemy, BACKGROUND_COLOR);
 }
 
-void renderEnemy(uint8_t inimigo, uint16_t cor)
+void renderEnemy(uint8_t enemy, uint16_t color)
 {
-    tft.fillCircle(enemies[inimigo].positionX, enemies[inimigo].positionY, 25, cor);
+    tft.fillCircle(enemies[enemy].positionX, enemies[enemy].positionY, 25, color);
 }
 
 void showCredits()
@@ -529,12 +529,12 @@ void movePlayerShip(int8_t x)
         (x < 0 && playerPositionX > 0)) && (millis() - lastPlayerMovementUpdate > 18)) {
         hidePlayerShip();
         
-        if (x > 0) { // direita positivo
+        if (x > 0) { // inputRight positivo
             if (playerPositionX > 215) {
                 playerPositionX = 215;
             }
             playerPositionX += x;
-        } else { // esquerda (negativo)
+        } else { // inputLeft (negativo)
             if(playerPositionX + x > 0) {
                 playerPositionX += x;
             } else {
