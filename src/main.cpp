@@ -33,6 +33,7 @@
 
 #define DELAY_UPDATE_PROJECTILE     20
 #define DELAY_SHOT_PROJECTILE       250
+#define DELAY_SPAWN_ENEMY           1500
 
 // CORES
 #define BASE_TEXT_COLOR             0xFFE0
@@ -89,7 +90,7 @@ boolean isPointInCircle(uint8_t targetX, uint8_t targetY, uint8_t targetRadius, 
 boolean isPlayerPointsInScore();
 void showGameOver();
 void applyPlayerDamage();
-
+void SpawnNewEnemy();
 
 const unsigned char playerShipBitmap[] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -138,6 +139,7 @@ uint8_t playerPositionX = 100;
 uint32_t lastPlayerMovementUpdate = 0;
 
 uint32_t lastPlayerShotUpdate = 0;
+uint32_t lastSpawnEnemyUpdate = 0;
 
 uint32_t rankingPoints[MAX_RANKING_ENTRIES] = {0, 0, 0};
 char playersNames[MAX_RANKING_ENTRIES][MAX_NAME_PLAYER] = {"\0", "\0", "\0"};
@@ -264,8 +266,6 @@ void initGame()
 
     showHUD();
     renderPlayerShip();
-
-    enableEnemy(0, 120, 35);
 }
 
 void updateGame(int8_t leftInput, int8_t rightInput)
@@ -278,7 +278,23 @@ void updateGame(int8_t leftInput, int8_t rightInput)
     }
     shootPlayerProjectile();
     updateProjectiles();
+
+    SpawnNewEnemy();
+
     updateEnemies();
+}
+
+void SpawnNewEnemy()
+{
+    if (millis() - lastSpawnEnemyUpdate > DELAY_SPAWN_ENEMY && totalEnemies < MAX_ENEMIES) {
+        lastSpawnEnemyUpdate = millis();
+        for (uint8_t i = 0; i < MAX_ENEMIES; i++) {
+            if (!enemies[i].active) {
+                enableEnemy(i, random(10, 180), random(10, 20));
+                break;
+            }
+        }
+    }
 }
 
 boolean shootPlayerProjectile()
@@ -387,6 +403,7 @@ void enableEnemy(uint8_t enemy, uint8_t positionX, uint8_t positionY)
         enemies[enemy].lastMovementUpdate = 0;
         enemies[enemy].active = true;
         enemies[enemy].hp = 5;
+        totalEnemies++;
 
         renderEnemy(enemy);
     }
@@ -394,8 +411,11 @@ void enableEnemy(uint8_t enemy, uint8_t positionX, uint8_t positionY)
 
 void removeEnemy(uint8_t enemy)
 {
-    enemies[enemy].active = false;
-    hideEnemy(enemy);
+    if (enemies[enemy].active) {
+        enemies[enemy].active = false;
+        hideEnemy(enemy);
+        totalEnemies--;
+    }
 }
 
 boolean isPlayerPointsInScore()
