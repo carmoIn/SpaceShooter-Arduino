@@ -24,6 +24,8 @@
 #define TELA_JOGAR              1
 #define TELA_RANKING            2
 #define TELA_CREDITOS           3
+#define TELA_SCORE              4
+#define TELA_GAME_OVER          5
 
 #define MOVIMENTO_NAVE_ESQ      8
 #define MOVIMENTO_NAVE_DIR      -8
@@ -38,7 +40,7 @@
 
 // MAXIMO RANKING E MAXIMO NOME DO JOGADOR
 #define MAXIMO_RANKING          3
-#define MAXIMO_NOME_JOGADOR     31
+#define MAXIMO_NOME_JOGADOR     4
 #define MAXIMO_TIROS            3
 #define MAXIMO_INIMIGOS         3
 #define MAXIMO_VIDAS            1
@@ -67,6 +69,7 @@ void imprimirTexto(uint8_t x, uint8_t y, const __FlashStringHelper* texto);
 void renderizarInimigo(uint8_t inimigo, uint16_t cor = ST77XX_WHITE);
 
 void atualizaDisparos();
+void atualizarRanking();
 void ativarInimigo(uint8_t inimigo, uint8_t posicaoX, uint8_t posicaoY);
 boolean dispararTiro();
 void atualizarDisparos();
@@ -118,7 +121,7 @@ uint8_t menuSelecionado = 1;
 uint8_t telaAtual = 0;
 
 uint8_t seletorNome = 0;
-String nomeJogador = "A__";
+char nomeJogador[MAXIMO_NOME_JOGADOR] = "A__";
 uint8_t totalVidas = MAXIMO_VIDAS;
 uint16_t totalPontos = 0;
 uint8_t posicaoNave = 100;
@@ -126,8 +129,8 @@ uint32_t delayNave = 0;
 
 uint32_t delayTiro = 0;
 
-uint16_t pontosRanking[MAXIMO_RANKING] = {0, 0, 0};
-char jogador[MAXIMO_RANKING][MAXIMO_NOME_JOGADOR] = {"", "", ""};
+uint32_t pontosRanking[MAXIMO_RANKING] = {0, 0, 0};
+char jogadores[MAXIMO_RANKING][MAXIMO_NOME_JOGADOR] = {"\0", "\0", "\0"};
 
 void setup(void) {
     Serial.begin(9600);
@@ -245,7 +248,7 @@ void iniciarJogo()
     delay(1000);  
     totalPontos = 0;
     seletorNome = 0;
-    nomeJogador = "A__";
+    strcpy(nomeJogador, "A__");
     totalVidas = MAXIMO_VIDAS;
 
     exibirHUD();
@@ -371,11 +374,11 @@ void imprimirTelaGameOver()
     imprimirTexto(20, 60, F("GameOver"));
     formatarTextoBase(3);
     if (checarRanking()) {
-        telaAtual = 6;
+        telaAtual = TELA_SCORE;
         imprimirTexto(20, 100, String(totalPontos));
         atualizarSeletorGameOver();
     } else {
-        telaAtual = 5;
+        telaAtual = TELA_GAME_OVER;
     }
 }
 
@@ -403,10 +406,18 @@ void atualizarNomeJogador(int8_t esquerda, int8_t direita)
             nomeJogador[seletorNome] = 'A';
             atualizarSeletorGameOver();
         } else {
+            atualizarRanking();
             voltarMenu();
         }
     }
     delay(200);
+}
+
+void atualizarRanking()
+{
+    strcpy(jogadores[MAXIMO_RANKING - 1], nomeJogador);
+    pontosRanking[MAXIMO_RANKING - 1] = totalPontos;
+    ordenarRanking();
 }
 
 void perderVida()
@@ -478,7 +489,7 @@ void imprimirRanking()
 
     for (int i = 0; i < 3; i++) {
         tft.setCursor(36, INICIO_LINHA_MENU + ((i + 2) * TAMANHO_LINHA_MENU));
-        tft.print(jogador[i]);
+        tft.print(jogadores[i]);
         tft.print (": ");
         tft.print(pontosRanking[i]);
     }
@@ -519,17 +530,18 @@ void ocultarNave()
 
 void ordenarRanking()
 {
-    int i, j, troca;
-    char troca2[MAXIMO_RANKING];
-    for (i = 0; i < 2; i++) {
+    uint8_t i, j;
+    uint32_t troca;
+    char trocaNome[MAXIMO_NOME_JOGADOR];
+    for (i = 0; i < MAXIMO_RANKING - 1; i++) {
         for (j = i + 1; j < 3; j++) {
             if (pontosRanking[j] > pontosRanking[i]) {
                 troca = pontosRanking[j];
                 pontosRanking[j] = pontosRanking[i];
                 pontosRanking[i] = troca;
-                strcpy(troca2, jogador[j]);
-                strcpy(jogador[j], jogador[i]);
-                strcpy(jogador[i], troca2);
+                strcpy(trocaNome, jogadores[j]);
+                strcpy(jogadores[j], jogadores[i]);
+                strcpy(jogadores[i], trocaNome);
             }
         }
     }
@@ -555,7 +567,7 @@ void loop() {
                 selecionarOpcaoMenu();
             }
         } else {
-            if (telaAtual == 5) {
+            if (telaAtual == TELA_SCORE) {
                 atualizarNomeJogador(selecionaEstado, confirmaEstado);
             } else {
                 if (selecionaEstado == HIGH || confirmaEstado == HIGH) {
