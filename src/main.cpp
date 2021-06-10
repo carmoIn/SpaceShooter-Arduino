@@ -75,6 +75,8 @@ void ativarInimigo(uint8_t inimigo, uint8_t posicaoX, uint8_t posicaoY);
 boolean dispararTiro();
 void atualizarDisparos();
 void atualizaInimigos();
+void removerInimigo(uint8_t inimigo);
+void aplicarDanoInimigo(uint8_t inimigo, uint8_t dano);
 void renderizarTiro(uint8_t tiro);
 void ocultarInimigo(uint8_t inimigo);
 void atualizarSeletorGameOver();
@@ -109,10 +111,11 @@ typedef struct {
     uint8_t posicaoY;
     uint32_t ultimoDano;
     uint32_t ultimoMovimento;
+    uint8_t vida;
     boolean ativo;
 } inimigo;
 
-inimigo inimigos[MAXIMO_INIMIGOS] = {0, 0, 0, 0, false};
+inimigo inimigos[MAXIMO_INIMIGOS] = {0, 0, 0, 0, 5, false};
 uint8_t totalInimigos = 0;
 
 tiro tiros[MAXIMO_TIROS] = {0, 0, 0, false};
@@ -326,11 +329,23 @@ void atualizaDisparos()
             {
                 somarPontos(10);
                 removerTiro(i);
-                inimigos[inimigo].ultimoDano = millis();
-                renderizarInimigo(inimigo, ST77XX_RED);
+                aplicarDanoInimigo(inimigo, 1);
             }
             tiros[i].ultimaAtualizacao = millis();
         }
+    }
+}
+
+void aplicarDanoInimigo(uint8_t inimigo, uint8_t dano)
+{
+    if (inimigos[inimigo].vida - dano > 0)
+    {
+        inimigos[inimigo].vida -= dano;
+        inimigos[inimigo].ultimoDano = millis();
+        renderizarInimigo(inimigo, ST77XX_RED);
+    } else  {
+        inimigos[inimigo].vida = 0;
+        removerInimigo(inimigo);
     }
 }
 
@@ -365,9 +380,16 @@ void ativarInimigo(uint8_t inimigo, uint8_t posicaoX, uint8_t posicaoY)
         inimigos[inimigo].ultimoDano = 0;
         inimigos[inimigo].ultimoMovimento = 0;
         inimigos[inimigo].ativo = true;
+        inimigos[inimigo].vida = 5;
 
         renderizarInimigo(inimigo);
     }
+}
+
+void removerInimigo(uint8_t inimigo)
+{
+    inimigos[inimigo].ativo = false;
+    ocultarInimigo(inimigo);
 }
 
 boolean checarRanking()
