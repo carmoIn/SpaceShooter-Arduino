@@ -30,11 +30,16 @@
 #define MOVEMENT_DISTANCE_LEFT      8
 #define MOVEMENT_DISTANCE_RIGHT     -8
 #define MOVIMENT_DISTANCE_SHOT      10
+#define MOVEMENT_RIGHT_LIMIT        215
+#define MOVEMENT_LEFT_LIMIT         0
+
+#define PLAYER_SPAWN_Y              195
 
 #define DELAY_UPDATE_PROJECTILE     20
 #define DELAY_SHOT_PROJECTILE       250
 #define DELAY_SPAWN_ENEMY           1500
 #define DELAY_UPDATE_ENEMY          50
+#define DELAY_PLAYER_MOVEMENT       18
 
 // CORES
 #define BASE_TEXT_COLOR             0xFFE0
@@ -339,7 +344,7 @@ boolean shootPlayerProjectile()
             for (uint8_t i = 0; i < MAX_PLAYER_PROJECTILES; i++) {
                 if (!playerProjectiles[i].active) {
                     playerProjectiles[i].positionX = playerPositionX + 14;
-                    playerProjectiles[i].positionY = 205;
+                    playerProjectiles[i].positionY = PLAYER_SPAWN_Y + 5;
                     playerProjectiles[i].lastUpdate = 0;
                     playerProjectiles[i].active = true;
                     lastPlayerShotUpdate = millis();
@@ -591,20 +596,21 @@ void showRanking()
 
 void movePlayerShip(int8_t x)
 {
-    if (((x > 0 && playerPositionX < 215) ||
-        (x < 0 && playerPositionX > 0)) && (millis() - lastPlayerMovementUpdate > 18)) {
+    if (((x > 0 && playerPositionX < MOVEMENT_RIGHT_LIMIT) ||
+        (x < 0 && playerPositionX > MOVEMENT_LEFT_LIMIT)) &&
+        (millis() - lastPlayerMovementUpdate > DELAY_PLAYER_MOVEMENT)) {
         hidePlayerShip();
         
         if (x > 0) { // rightInput positivo
-            if (playerPositionX > 215) {
-                playerPositionX = 215;
+            if (playerPositionX > MOVEMENT_RIGHT_LIMIT) {
+                playerPositionX = MOVEMENT_RIGHT_LIMIT;
             }
             playerPositionX += x;
         } else { // leftInput (negativo)
-            if(playerPositionX + x > 0) {
+            if(playerPositionX + x > MOVEMENT_LEFT_LIMIT) {
                 playerPositionX += x;
             } else {
-                playerPositionX = 0;
+                playerPositionX = MOVEMENT_LEFT_LIMIT;
             }
         }
         lastPlayerMovementUpdate = millis();
@@ -614,12 +620,12 @@ void movePlayerShip(int8_t x)
 
 void renderPlayerShip()
 {
-    tft.drawBitmap(playerPositionX, 200, playerShipBitmap, 32, 32, ACTOR_COLOR);
+    tft.drawBitmap(playerPositionX, PLAYER_SPAWN_Y, playerShipBitmap, 32, 32, ACTOR_COLOR);
 }
 
 void hidePlayerShip()
 {
-    tft.drawBitmap(playerPositionX, 200, playerShipBitmap, 32, 32, BACKGROUND_COLOR);
+    tft.drawBitmap(playerPositionX, PLAYER_SPAWN_Y, playerShipBitmap, 32, 32, BACKGROUND_COLOR);
 }
 
 void sortRanking()
