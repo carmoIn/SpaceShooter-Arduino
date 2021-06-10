@@ -24,8 +24,9 @@
 #define SCREEN_PLAY                 1
 #define SCREEN_RANKING              2
 #define SCREEN_CREDITS              3
-#define SCREEN_SCORE                4
-#define SCREEN_GAME_OVER            5
+#define SCREEN_END_GAME             4
+#define SCREEN_SCORE                5
+#define SCREEN_GAME_OVER            6
 
 #define MOVEMENT_DISTANCE_LEFT      8
 #define MOVEMENT_DISTANCE_RIGHT     -8
@@ -100,7 +101,7 @@ void applyEnemyDamage(uint8_t enemy, uint8_t damage);
 boolean isPointInCircle(uint8_t targetX, uint8_t targetY, uint8_t targetRadius, uint8_t x, uint8_t y);
 boolean isPlayerPointsInScore();
 void showGameOver();
-void applyPlayerDamage();
+int applyPlayerDamage();
 void SpawnNewEnemy();
 void resetGameVariables();
 
@@ -308,20 +309,18 @@ void resetGameVariables()
 
 void updateGame(int8_t leftInput, int8_t rightInput)
 {
-    if (currentScreen == SCREEN_PLAY) {
-        if (leftInput == HIGH) {
-            movePlayerShip(MOVEMENT_DISTANCE_RIGHT);
-        }
-        if (rightInput == HIGH) {
-            movePlayerShip(MOVEMENT_DISTANCE_LEFT);
-        }
-        shootPlayerProjectile();
-        updateProjectiles();
-
-        SpawnNewEnemy();
-
-        updateEnemies();
+    if (leftInput == HIGH) {
+        movePlayerShip(MOVEMENT_DISTANCE_RIGHT);
     }
+    if (rightInput == HIGH) {
+        movePlayerShip(MOVEMENT_DISTANCE_LEFT);
+    }
+    shootPlayerProjectile();
+    updateProjectiles();
+
+    SpawnNewEnemy();
+
+    updateEnemies();
 }
 
 void SpawnNewEnemy()
@@ -468,6 +467,7 @@ boolean isPlayerPointsInScore()
 
 void showGameOver()
 {
+    currentScreen = SCREEN_END_GAME;   
     formatBaseText(4);
     tft.fillRect(10, 50, 220, 120, GAME_OVER_COLOR);
     showText(20, 60, F("GameOver"));
@@ -519,13 +519,14 @@ void updateRanking()
     sortRanking();
 }
 
-void applyPlayerDamage()
+int applyPlayerDamage()
 {
     if (totalLives <= 1) {
         showGameOver();
     }
     totalLives--;
     showHUD();
+    return totalLives;
 }
 
 void updateEnemies()
@@ -536,7 +537,9 @@ void updateEnemies()
             if (enemies[i].positionY + 4 > 220) {
                 enemies[i].positionY = 0;
 
-                applyPlayerDamage();
+                if (!applyPlayerDamage()) {
+                    return;
+                }
             } else {
                 enemies[i].positionY += 4;
             }
