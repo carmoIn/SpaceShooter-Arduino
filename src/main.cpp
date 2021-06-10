@@ -14,6 +14,8 @@
 #define BUTTON_SELECT_PIN           2 //botão para selecionar
 #define BUTTON_CONFIRM_PIN          3 //botão para confirmar
 
+#define BUZZER_PIN                  4
+
 // DEFINIÇÕES DE ALINHAMENTO
 #define FIRST_LINE_MENU             10
 #define LINE_HEIGHT_MENU            38
@@ -24,8 +26,9 @@
 #define SCREEN_PLAY                 1
 #define SCREEN_RANKING              2
 #define SCREEN_CREDITS              3
-#define SCREEN_SCORE                4
-#define SCREEN_GAME_OVER            5
+#define SCREEN_OPTIONS              4
+#define SCREEN_SCORE                5
+#define SCREEN_GAME_OVER            6
 
 #define MOVEMENT_DISTANCE_LEFT      8
 #define MOVEMENT_DISTANCE_RIGHT     -8
@@ -36,7 +39,7 @@
 #define PLAYER_SPAWN_Y              195
 
 #define DELAY_UPDATE_PROJECTILE     20
-#define DELAY_SHOT_PROJECTILE       250
+#define DELAY_SHOT_PROJECTILE       200
 #define DELAY_SPAWN_ENEMY           1500
 #define DELAY_UPDATE_ENEMY          50
 #define DELAY_PLAYER_MOVEMENT       18
@@ -169,6 +172,8 @@ void setup(void) {
     pinMode(BUTTON_SELECT_PIN, INPUT);
     pinMode(BUTTON_CONFIRM_PIN, INPUT);
 
+    pinMode(BUZZER_PIN, OUTPUT);
+
     sortRanking();
     showMainMenu();
 }
@@ -242,6 +247,7 @@ void showMenuSelector()
 
 void updateMenuSelector()
 {
+    tone(BUZZER_PIN, 400, 50);
     hidePreviousSelector();
     if (currentMenuOption < NUMBER_SCREENS) {
         currentMenuOption++;
@@ -256,6 +262,7 @@ void updateMenuSelector()
 
 void selectMenuOption()
 {
+    tone(BUZZER_PIN, 600, 50);
     switch (currentMenuOption) {
         case SCREEN_PLAY: initGame();
             break;
@@ -341,6 +348,7 @@ boolean shootPlayerProjectile()
         if (totalPlayerProjectiles < MAX_PLAYER_PROJECTILES) {
             for (uint8_t i = 0; i < MAX_PLAYER_PROJECTILES; i++) {
                 if (!playerProjectiles[i].active) {
+                    tone(BUZZER_PIN, 200, 10);
                     playerProjectiles[i].positionX = playerPositionX + 14;
                     playerProjectiles[i].positionY = PLAYER_SPAWN_Y + 5;
                     playerProjectiles[i].lastUpdate = 0;
@@ -400,10 +408,12 @@ void applyEnemyDamage(uint8_t enemy, uint8_t damage)
 {
     if (enemies[enemy].hp - damage > 0)
     {
+        tone(BUZZER_PIN, 350, 20);
         enemies[enemy].hp -= damage;
         enemies[enemy].lastDamageUpdate = millis();
         renderEnemy(enemy, ACTOR_DAMAGE_COLOR);
     } else  {
+        tone(BUZZER_PIN, 200, 100);
         enemies[enemy].hp = 0;
         removeEnemy(enemy);
     }
@@ -518,6 +528,7 @@ void updateRanking()
 
 int applyPlayerDamage()
 {
+    tone(BUZZER_PIN, 100, 50);
     if (totalLives <= 1) {
         showGameOver();
     }
@@ -649,6 +660,7 @@ void sortRanking()
 
 void backMainMenu()
 {
+    tone(BUZZER_PIN, 400, 50);
     currentScreen = SCREEN_MENU;
     showMainMenu();
 }
