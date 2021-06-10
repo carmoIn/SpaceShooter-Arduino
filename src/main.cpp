@@ -24,9 +24,8 @@
 #define SCREEN_PLAY                 1
 #define SCREEN_RANKING              2
 #define SCREEN_CREDITS              3
-#define SCREEN_END_GAME             4
-#define SCREEN_SCORE                5
-#define SCREEN_GAME_OVER            6
+#define SCREEN_SCORE                4
+#define SCREEN_GAME_OVER            5
 
 #define MOVEMENT_DISTANCE_LEFT      8
 #define MOVEMENT_DISTANCE_RIGHT     -8
@@ -467,7 +466,7 @@ boolean isPlayerPointsInScore()
 
 void showGameOver()
 {
-    currentScreen = SCREEN_END_GAME;   
+    currentScreen = SCREEN_GAME_OVER;   
     formatBaseText(4);
     tft.fillRect(10, 50, 220, 120, GAME_OVER_COLOR);
     showText(20, 60, F("GameOver"));
@@ -476,8 +475,6 @@ void showGameOver()
         currentScreen = SCREEN_SCORE;
         showText(20, 100, String(totalPoints));
         updateGameOverSelector();
-    } else {
-        currentScreen = SCREEN_GAME_OVER;
     }
 }
 
