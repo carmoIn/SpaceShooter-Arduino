@@ -29,7 +29,7 @@
 
 #define MOVEMENT_DISTANCE_LEFT      8
 #define MOVEMENT_DISTANCE_RIGHT     -8
-#define MOVIMENTO_TIRO              10
+#define MOVIMENT_DISTANCE_SHOT      10
 
 #define DELAY_UPDATE_PROJECTILE     20
 #define DELAY_SHOT_PROJECTILE       250
@@ -366,8 +366,8 @@ void updateProjectiles()
     {
         if (playerProjectiles[i].active && (millis() - playerProjectiles[i].lastUpdate > DELAY_UPDATE_PROJECTILE)) {
             hidePlayerProjectile(i);
-            if (playerProjectiles[i].positionY - MOVIMENTO_TIRO > 0) {
-                playerProjectiles[i].positionY -= MOVIMENTO_TIRO;
+            if (playerProjectiles[i].positionY - MOVIMENT_DISTANCE_SHOT > 0) {
+                playerProjectiles[i].positionY -= MOVIMENT_DISTANCE_SHOT;
             } else {
                 removePlayerProjectile(i);
                 return;
