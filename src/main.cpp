@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <string.h>
 #include "SymbolMono18pt7b.h"
+#include "MusicSounds.h"
 
 // PINOS DISPLAY
 #define TFT_CS                      10
@@ -166,8 +167,8 @@ void setup(void) {
     tft.init(240, 240, SPI_MODE2);    // Init ST7789 display 240x240 pixel
     tft.setRotation(2);
 
-    //showLogo();
-    //delay(3000);
+    showLogo();
+    playIntro();
 
     pinMode(BUTTON_SELECT_PIN, INPUT);
     pinMode(BUTTON_CONFIRM_PIN, INPUT);
@@ -481,6 +482,7 @@ void showGameOver()
     tft.fillRect(10, 50, 220, 120, GAME_OVER_COLOR);
     showText(20, 60, F("GameOver"));
     formatBaseText(3);
+    playLoseSound();
     if (isPlayerPointsInScore()) {
         currentScreen = SCREEN_SCORE;
         showText(20, 100, String(totalPoints));
